@@ -1,0 +1,141 @@
+<template>
+    <require from="./assets/css/styles.css"></require>
+    <body>
+        <div class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
+            <div class="container">
+                <a href="../" class="navbar-brand">Blockchain</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+                    aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Food Manufacturer</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Distribution Company</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Retailer</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    
+    
+        <div class="container">
+            <!-- Tables 
+                  ================================================== -->
+            <div class="bs-docs-section">
+                <div class="row" style="margin-bottom: 2rem;">
+                    <div class="col-lg-12">
+                        <div class="bs-component">
+                            <ul class="nav nav-tabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-toggle="tab" href="#network">Peer Network</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="tab" href="#blockchain">Local Blockchain</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="tab" href="#addblock">Add Block</a>
+                                </li>
+                            </ul>
+                            <div id="myTabContent" class="tab-content">
+                                <div class="tab-pane fade show active" id="network">
+                                    <p>This displays a list of other peers currently on the network.</p>
+                                    <div class="bs-component">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Peer Name</th>
+                                                    <th scope="col">IP Address</th>
+                                                    <th scope="col">Port</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <th scope="row">Manufacturing Company</th>
+                                                    <td>localhost</td>
+                                                    <td>6001</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="blockchain">
+                                    <p>A list of all blocks on this local blockchain</p>
+                                    <div class="bs-component">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Index</th>
+                                                    <th scope="col">Timestamp</th>
+                                                    <th scope="col">Data</th>
+                                                    <th scope="col">Hash</th>
+                                                    <th scope="col">Previous Hash</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr repeat.for="block of blockchain">
+                                                    <th scope="row">${block.prodName}</th>
+                                                    <td>1574805356.469</td>
+                                                    <td>Data</td>
+                                                    <td>225a76d4f64c54dee865e0f14e707a44dba9c7ea34967757ac2936f863a2c152
+                                                    </td>
+                                                    <td>816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="addblock">
+                                    <form submit.trigger="addBlock()">
+                                        <fieldset>
+                                            <p>Add Block</p>
+                                            <div class="form-group">
+                                                <label for="prodName" class="col-sm-2 col-form-label">Product Name</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="prodName" value="Soup" value.bind="prodName">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="serialNo" class="col-sm-2 col-form-label">Serial No</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="serialNo" value="16255">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="expDate" class="col-sm-2 col-form-label">Expiration Date</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="expDate" value="1/1/2020">
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary" submit.trigger="addBlock()">Save</button>
+                                        </fieldset>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+            </div>
+    
+            <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+                integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+                crossorigin="anonymous"></script>
+            <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+                integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+                crossorigin="anonymous"></script>
+            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.0/js/bootstrap.min.js"
+                integrity="sha384-3qaqj0lc6sV/qpzrc1N5DC6i1VRn/HyX4qdPaiEFbn54VjQBEU341pvjz7Dv3n6P"
+                crossorigin="anonymous"></script>
+            <script src="main.js"></script>
+    </body>
+    
+    </html>
+</template>

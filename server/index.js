@@ -28,14 +28,20 @@ function initHttpServer() {
     var app = express();
     app.use(bodyParser.json());
 
+    app.use(function(req, res, next) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
+    });
+
     //Blockchain API routes
-    app.get('/blocks', function (req, res) {
+    app.get('/api/v1/blocks', function (req, res) {
         res.send(JSON.stringify(blockchain));
     });
-    app.get('/blocks/latest', function (req, res) {
+    app.get('/api/v1/blocks/latest', function (req, res) {
         res.send(JSON.stringify([getLatestBlock()]));
     });
-    app.post('/blocks/mine', function (req, res) {
+    app.post('/api/v1/blocks/mine', function (req, res) {
         var newBlock = generateNextBlock(req.body.data);
         addBlock(newBlock);
         broadcast(responseLatestMsg());
@@ -44,10 +50,10 @@ function initHttpServer() {
     });
 
     //Peer/Node API routes
-    app.get('/peers', function (req, res) {
+    app.get('/api/v1/peers', function (req, res) {
         res.send(sockets.map(s => s._socket.remoteAddress + ':' + s._socket.remotePort));
     });
-    app.post('/peers/add', function (req, res) {
+    app.post('/api/v1/peers/add', function (req, res) {
         logger.winston.info(req.body);
         connectToPeers([req.body.peer]);
         res.send();
@@ -55,7 +61,7 @@ function initHttpServer() {
 
     //Create HTTP Server
     app.listen(http_port, function () {
-        logger.winston.info('HTTP API on: http://localhost:' + http_port + " ");
+        logger.winston.info('HTTP API on: http://localhost:' + http_port + "/api/v1/");
     });
 };
 
@@ -66,7 +72,7 @@ function initP2PServer () {
     server.on('connection', function(ws) {
         initConnection(ws)
     });
-    logger.winston.info('Websocket P2P on: http://localhost:' + p2p_port + " ");
+    logger.winston.info('Websocket P2P on: http://localhost:' + p2p_port);
 };
 
 function initConnection (ws) {
@@ -90,7 +96,7 @@ function initMessageHandler (ws) {
                 write(ws, responseChainMsg());
                 break;
             case messageTypes.RESPONSE_BLOCKCHAIN:
-                handleBlockchainResponse(message);
+                //handleBlockchainResponse(message);
                 break;
         }
     });
@@ -150,14 +156,14 @@ function addBlock (newBlock) {
 
 function isValidNewBlock (newBlock, previousBlock) {
     if (previousBlock.index + 1 !== newBlock.index) {
-        logger.winston.info('invalid index');
+        logger.winston.error('invalid index');
         return false;
     } else if (previousBlock.hash !== newBlock.previousHash) {
-        logger.winston.info('invalid previous hash');
+        logger.winston.error('invalid previous hash');
         return false;
     } else if (calculateHashForBlock(newBlock) !== newBlock.hash) {
-        logger.winston.info(typeof (newBlock.hash) + ' ' + typeof calculateHashForBlock(newBlock));
-        logger.winston.info('invalid hash: ' + calculateHashForBlock(newBlock) + ' ' + newBlock.hash);
+        logger.winston.error(typeof (newBlock.hash) + ' ' + typeof calculateHashForBlock(newBlock));
+        logger.winston.error('invalid hash: ' + calculateHashForBlock(newBlock) + ' ' + newBlock.hash);
         return false;
     }
     return true;
