@@ -11,6 +11,10 @@ $(function () {
         getPeers();
     });
 
+    $("#btnDiscoverPeers").click(function () {
+        discoverPeers();
+    });
+
     $("#btnGetBlockchain").click(function () {
         getBlockchain();
     });
@@ -29,6 +33,10 @@ $(function () {
 
     $("#btnAddPeer").click(function () {
         savePeer();
+    });
+
+    $('#network').on('click', '.btnDisconnect', function(){
+        disconnectPeer(event.target.attributes.data.nodeValue);
     });
 
     function getBlockchain() {
@@ -52,6 +60,17 @@ $(function () {
         })
     }
 
+    function discoverPeers() {
+        $.ajax({
+            type: "GET",
+            url: "api/v1/peers/discover",
+            dataType: "json",
+            success: function (data) {
+                getPeers();
+            }
+        })
+    }
+
     function getPeers() {
         $.ajax({
             type: "GET",
@@ -61,7 +80,9 @@ $(function () {
                 var table = $("#peers tbody");
                 $("#peers tbody tr").remove();
                 $.each(data, function (idx, peer) {
-                    table.append("<tr><td>" + peer + "</td></tr>");
+                    table.append("<tr><td>" + peer 
+                    + "</td><td><button type='button' class='btnDisconnect' data='" + peer + "'><i class='fa fa-trash'></i>  Remove</button>"
+                    + "</td></tr>");
                 });
             }
         })
@@ -123,6 +144,25 @@ $(function () {
             success: function() {
                 getPeers();
                 showMessage("Peer added", "alert-success");
+            }
+        })
+    }
+
+    function disconnectPeer(url) {
+        var data = {
+            peer: url
+        };
+
+
+        $.ajax({
+            method: "DELETE",
+            url: "api/v1/peers",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            success: function() {
+                getPeers();
+                showMessage("Peer disconnected", "alert-success");
             }
         })
     }
