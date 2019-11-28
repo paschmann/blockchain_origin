@@ -5,11 +5,15 @@ var bodyParser = require('body-parser');
 var WebSocket = require("ws");
 var Block = require("./block");
 var logger = require("./logger");
+var portscanner = require('portscanner');
 
 var http_port = process.env.HTTP_PORT || 3001;
 var p2p_port = process.env.P2P_PORT || 6001;
 var initialPeers = process.env.PEERS ? process.env.PEERS.split(',') : [];
+var server_name = process.env.NODE_NAME || "Unknown Node";
+var peers = initialPeers;
 
+var connectedPeers = []
 var sockets = [];
 
 var messageTypes = {
@@ -23,6 +27,7 @@ var blockchain = [Block.genesis()]; //Initialize in-memory blockchain with genes
 connectToPeers(initialPeers);
 initHttpServer();
 initP2PServer();
+setInterval(initP2PAutoDiscovery, 3000);
 
 function initHttpServer() {
     var app = express();
@@ -42,11 +47,11 @@ function initHttpServer() {
         res.send(JSON.stringify([getLatestBlock()]));
     });
     app.post('/api/v1/blocks/mine', function (req, res) {
-        var newBlock = generateNextBlock(req.body.data);
+        var newBlock = generateNextBlock(JSON.stringify(req.body));
         addBlock(newBlock);
         broadcast(responseLatestMsg());
         logger.winston.info('block added: ' + JSON.stringify(newBlock));
-        res.send();
+        res.send({});
     });
 
     //Peer/Node API routes
@@ -54,15 +59,23 @@ function initHttpServer() {
         res.send(sockets.map(s => s._socket.remoteAddress + ':' + s._socket.remotePort));
     });
     app.post('/api/v1/peers/add', function (req, res) {
-        logger.winston.info(req.body);
         connectToPeers([req.body.peer]);
-        res.send();
+        res.send({});
     });
+    app.delete('/api/v1/peers', function (req, res) {
+        disconnectPeer([req.body.peer]);
+        res.send({});
+    });
+
+
+    // Serve static files for UI website on root
+    app.use('/', express.static('web/'));
+    app.use('/scripts', express.static('node_modules/'));
 
     //Create HTTP Server
     app.listen(http_port, function () {
-        logger.winston.info('HTTP API on: http://localhost:' + http_port + "/api/v1/");
-    });
+        logger.winston.info('HTTP API on: http://localhost:' + http_port + '/api/v1/');
+    }); 
 };
 
 
@@ -72,8 +85,27 @@ function initP2PServer () {
     server.on('connection', function(ws) {
         initConnection(ws)
     });
-    logger.winston.info('Websocket P2P on: http://localhost:' + p2p_port);
+    logger.winston.info('Websocket P2P on: ws://localhost:' + p2p_port);
 };
+
+function initP2PAutoDiscovery () { 
+    //We assume other Nodes are on localhost and their port number is in the range 6001 -> 6010
+    var server = "ws://localhost:";
+    var i = 6000;
+
+    while (i < 6011) {
+        portscanner.findAPortInUse(i).then(function(port_no) {
+            var address = server + port_no;
+            if (server && port_no && peers.indexOf(address) == -1 && findWithAttr(sockets, "url", address) == -1 && port_no.toString() !== p2p_port.toString()) {
+                logger.winston.info("New node added: " + address);
+                peers.push(address);
+                connectToPeers(peers);
+            }
+        })
+        i++;
+    }
+}
+
 
 function initConnection (ws) {
     //Initialize P2P connection
@@ -87,7 +119,7 @@ function initMessageHandler (ws) {
     //Initialize P2P message handler/router
     ws.on('message', function (data) {
         var message = JSON.parse(data);
-        logger.winston.info('Received message' + JSON.stringify(message));
+        logger.winston.info('Received message' + JSON.stringify(message).substr(0, 20));
         switch (message.type) {
             case messageTypes.QUERY_LATEST:
                 write(ws, responseLatestMsg());
@@ -96,7 +128,7 @@ function initMessageHandler (ws) {
                 write(ws, responseChainMsg());
                 break;
             case messageTypes.RESPONSE_BLOCKCHAIN:
-                //handleBlockchainResponse(message);
+                handleBlockchainResponse(message);
                 break;
         }
     });
@@ -105,8 +137,8 @@ function initMessageHandler (ws) {
 function initErrorHandler(ws) {
     //Initialize error handler
     var closeConnection = function (ws) {
-        logger.winston.error('connection failed to peer: ' + ws.url);
-        sockets.splice(sockets.indexOf(ws), 1);
+        logger.winston.error('Connection failed to: ' + ws.url);
+        disconnectPeer(ws.url);
     };
     ws.on('close', function () { 
         closeConnection(ws);
@@ -117,17 +149,28 @@ function initErrorHandler(ws) {
 };
 
 function connectToPeers (newPeers) {
-    //Connect to all peers
+    //Connect to initialPeer List or any additional peers added
     newPeers.forEach((peer) => {
-        var ws = new WebSocket(peer);
-        ws.on('open', function () { 
-            initConnection(ws);
-        });
-        ws.on('error', function () {
-            logger.winston.error('connection failed');
-        });
+        if (findWithAttr(sockets, "url", peer) == -1) {
+            var ws = new WebSocket(peer);
+            ws.on('open', function () { 
+                initConnection(ws);
+            });
+            ws.on('error', function () {
+                logger.winston.error('Connection failed to: ' + ws.url);
+                disconnectPeer(ws.url);
+            });
+        }
     });
 };
+
+function disconnectPeer(url) {
+    if (url) {
+        var idx = findWithAttr(sockets, "url", url)
+        sockets.splice(idx, 1);
+        peers.splice(peers.indexOf(url), 1);
+    }
+}
 
 function generateNextBlock (blockData) {
     //Generate new block ( /blocks/mine )
@@ -135,7 +178,8 @@ function generateNextBlock (blockData) {
     var nextIndex = previousBlock.index + 1;
     var nextTimestamp = new Date().getTime() / 1000;
     var nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimestamp, blockData);
-    return new Block(nextIndex, previousBlock.hash, nextTimestamp, blockData, nextHash);
+    var sourceNode = "http://localhost:" + http_port;
+    return new Block(nextIndex, previousBlock.hash, nextTimestamp, blockData, nextHash, sourceNode);
 };
 
 
@@ -171,27 +215,32 @@ function isValidNewBlock (newBlock, previousBlock) {
 
 function handleBlockchainResponse (message) {
     //Receieved blockchain from a Peer, compare it to the local blockchain
-    var receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index)); //Sort blockchain by the index property
-    var latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
-    var latestBlockHeld = getLatestBlock();
-    //Compare last received block index with the held block index
-    if (latestBlockReceived.index > latestBlockHeld.index) {
-        logger.winston.info('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
-        //Check if the latest held block hash is equal to the previous hash of the latest received block PREVIOUS hash
-        if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
-            logger.winston.info("We can append the received block to our chain");
-            blockchain.push(latestBlockReceived);
-            broadcast(responseLatestMsg());
-        //If the received blocks length = 1, 
-        } else if (receivedBlocks.length === 1) {
-            logger.winston.info("We have to query the chain from our peer");
-            broadcast(queryAllMsg());
+    try { 
+        var receivedBlocks = [JSON.parse(message.data)];
+        receivedBlocks = receivedBlocks.sort((b1, b2) => (b1.index - b2.index)); //Sort blockchain by the index property
+        var latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
+        var latestBlockHeld = getLatestBlock();
+        //Compare last received block index with the held block index
+        if (latestBlockReceived.index > latestBlockHeld.index) {
+            logger.winston.info('Local Blockchain possibly behind. Local Index: ' + latestBlockHeld.index + ' Peer Index: ' + latestBlockReceived.index);
+            //Check if the latest held block hash is equal to the previous hash of the latest received block PREVIOUS hash
+            if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
+                logger.winston.info("We can append the received block to our chain");
+                blockchain.push(latestBlockReceived);
+                broadcast(responseLatestMsg());
+            //If the received blocks length = 1, 
+            } else if (receivedBlocks.length === 1) {
+                logger.winston.info("We have to query the chain from our peer");
+                broadcast(queryAllMsg());
+            } else {
+                logger.winston.info("Received blockchain is longer than current blockchain");
+                replaceChain(receivedBlocks);
+            }
         } else {
-            logger.winston.info("Received blockchain is longer than current blockchain");
-            replaceChain(receivedBlocks);
+            logger.winston.info('Received blockchain is not longer than current blockchain. Do nothing');
         }
-    } else {
-        logger.winston.info('received blockchain is not longer than current blockchain. Do nothing');
+    } catch (err) {
+        logger.winston.error(err);
     }
 };
 
@@ -249,4 +298,13 @@ function write (ws, message)  {
 
 function broadcast (message) {
     sockets.forEach(socket => write(socket, message));
+}
+
+function findWithAttr(array, attr, value) {
+    for(var i = 0; i < array.length; i += 1) {
+        if(array[i][attr] === value) {
+            return i;
+        }
+    }
+    return -1;
 }
