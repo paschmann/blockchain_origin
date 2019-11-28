@@ -119,7 +119,7 @@ function initMessageHandler (ws) {
     //Initialize P2P message handler/router
     ws.on('message', function (data) {
         var message = JSON.parse(data);
-        logger.winston.info('Received message' + JSON.stringify(message).substr(0, 20));
+        logger.winston.info('Rec. Message: ' + JSON.stringify(message).substr(0, 30));
         switch (message.type) {
             case messageTypes.QUERY_LATEST:
                 write(ws, responseLatestMsg());
@@ -227,8 +227,7 @@ function handleBlockchainResponse (message) {
             if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
                 logger.winston.info("We can append the received block to our chain");
                 blockchain.push(latestBlockReceived);
-                broadcast(responseLatestMsg());
-            //If the received blocks length = 1, 
+                broadcast(responseLatestMsg()); 
             } else if (receivedBlocks.length === 1) {
                 logger.winston.info("We have to query the chain from our peer");
                 broadcast(queryAllMsg());
@@ -277,19 +276,18 @@ function getLatestBlock () {
 }
 
 function queryChainLengthMsg () {
-    return {'type': messageTypes.QUERY_LATEST};
+    return {'source': p2p_port, 'type': messageTypes.QUERY_LATEST};
 }
 function queryAllMsg () {
-    return {'type': messageTypes.QUERY_ALL};
+    return {'source': p2p_port, 'type': messageTypes.QUERY_ALL};
 }
 
 function responseChainMsg () {
-    return {'type': messageTypes.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(blockchain) };
+    return {'source': p2p_port, 'type': messageTypes.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(blockchain) };
 }
 
 function responseLatestMsg () {
-    return {'type': messageTypes.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(getLatestBlock())
-    };
+    return {'source': p2p_port, 'type': messageTypes.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(getLatestBlock())};
 }
 
 function write (ws, message)  {
