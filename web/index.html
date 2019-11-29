@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="scripts/font-awesome/css/font-awesome.css">
 
     <script src="scripts/jquery/dist/jquery.js"></script>
-    <script src="../node_modules/popper.js/dist/popper.js"></script>
+    <script src="scripts/popper.js/dist/umd/popper.js"></script>
     <script src="scripts/bootstrap/dist/js/bootstrap.js"></script>
     <script src="main.js"></script>
 </head>
@@ -39,53 +39,57 @@
 
 
     <div class="container" id="peers">
-            <div id="alert" class="alert alert-dismissible collapse " role="alert">
-                    <button type="button" class="close" data-hide="alert">&times;</button>
-                    <span id="message"></span>
+        <div id="alert" class="alert alert-dismissible collapse " role="alert">
+            <button type="button" class="close" data-hide="alert">&times;</button>
+            <span id="message"></span>
+        </div>
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#network">Peer Network</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#addpeer">Add Peer</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="network">
+                <div class="clearfix">
+                    <p class="float-left">This displays a list of other peers currently on the network.</p>
+                    <button type="button" id="btnGetPeers" class="btn btn-primary float-right"
+                        style="margin-bottom: 10px; margin-left: 20px;">
+                        <i class="fa fa-refresh"></i>Refresh
+                    </button>
+                    <button type="button" id="btnDiscoverPeers" class="btn btn-primary float-right"
+                        style="margin-bottom: 10px;">
+                        <i class="fa fa-search"></i>Discover
+                    </button>
+                </div>
+                <table id="peers" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Peer</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>No peers connected</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <ul class="nav nav-tabs">
-                <li class="nav-item">
-                    <a class="nav-link active" data-toggle="tab" href="#network">Peer Network</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" href="#addpeer">Add Peer</a>
-                </li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="network">
-                    <div class="clearfix">
-                        <p class="float-left">This displays a list of other peers currently on the network.</p>
-                        <button type="button" id="btnGetPeers" class="btn btn-primary float-right"
-                            style="margin-bottom: 10px; margin-left: 20px;">
-                            <i class="fa fa-refresh"></i>Refresh
-                        </button>
-                        <button type="button" id="btnDiscoverPeers" class="btn btn-primary float-right"
-                            style="margin-bottom: 10px;">
-                            <i class="fa fa-search"></i>Discover
-                        </button>
+            <div class="tab-pane fade" id="addpeer">
+                <form>
+                    <div class="form-group">
+                        <label for="url">Peer URL and Port</label>
+                        <input class="form-control" id="url" value="ws://localhost:6001">
                     </div>
-                    <table id="peers" class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">Peer</th>
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="tab-pane fade" id="addpeer">
-                    <form>
-                        <div class="form-group">
-                            <label for="url">Peer URL and Port</label>
-                            <input class="form-control" id="url" value="ws://localhost:6001">
-                        </div>
-                        <button type="button" id="btnAddPeer" class="btn btn-primary">Save</button>
-                    </form>
-                </div>
+                    <button type="button" id="btnAddPeer" class="btn btn-primary">Save</button>
+                </form>
             </div>
-        </div> <!-- Container -->
+        </div>
+    </div> <!-- Container -->
 
 
     <div class="container" style="margin-top: 40px;">
@@ -115,6 +119,9 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <td>No blocks found</td>
+                        <td></td>
+                        <td></td>
                     </tbody>
                 </table>
             </div>

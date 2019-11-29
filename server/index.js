@@ -16,6 +16,8 @@ var peers = initialPeers;
 var connectedPeers = []
 var sockets = [];
 
+var server = new WebSocket.Server({ port: p2p_port });
+
 var messageTypes = {
     QUERY_LATEST: 0,
     QUERY_ALL: 1,
@@ -62,7 +64,7 @@ function initHttpServer() {
     //Peer/Node API routes
     app.get('/api/v1/peers/discover', function (req, res) {
         initP2PAutoDiscovery();
-        res.send({});
+        res.send({ status: "success"});
     });
     app.post('/api/v1/peers/add', function (req, res) {
         connectToPeers([req.body.peer]);
@@ -70,7 +72,7 @@ function initHttpServer() {
     });
     app.delete('/api/v1/peers', function (req, res) {
         disconnectPeer([req.body.peer]);
-        res.send({});
+        res.send({ status: "success"});
     });
 
 
@@ -87,7 +89,6 @@ function initHttpServer() {
 
 function initP2PServer() {
     //Create/initialize P2P Server
-    var server = new WebSocket.Server({ port: p2p_port });
     server.on('connection', function (ws) {
         initConnection(ws)
     });
@@ -96,13 +97,13 @@ function initP2PServer() {
 
 function initP2PAutoDiscovery() {
     //We assume other Nodes are on localhost and their port number is in the range 6001 -> 6010
-    var server = "ws://localhost:";
+    var host = "ws://localhost:";
     var i = 6000;
 
     while (i < 6011) {
         portscanner.findAPortInUse(i).then(function (port_no) {
-            var address = server + port_no;
-            if (server && port_no && peers.indexOf(address) == -1 && findWithAttr(sockets, "url", address) == -1 && port_no.toString() !== p2p_port.toString()) {
+            var address = host + port_no;
+            if (host && port_no && peers.indexOf(address) == -1 && findWithAttr(sockets, "url", address) == -1 && port_no.toString() !== p2p_port.toString()) {
                 logger.winston.info("New node added: " + address);
                 peers.push(address);
                 connectToPeers([address]);

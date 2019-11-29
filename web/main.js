@@ -45,17 +45,19 @@ $(function () {
             url: "api/v1/blocks",
             dataType: "json",
             success: function (data) {
-                var table = $("#blocks tbody");
-                $("#blocks tbody tr").remove();
-                $.each(data, function (idx, block) {
-                    table.append("<tr><td>" + block.index
-                    + "</td><td>" + block.timestamp 
-                    + "</td>   <td>" + block.data 
-                    + "<br /><b>Hash:</b> " + block.hash 
-                    + "<br /><b>Previous Hash:</b> " + block.previousHash 
-                    + "<br /><b>Source Node:</b> " + block.sourceNode 
-                    + "</td></tr>");
-                });
+                if (data.length > 0) {
+                    var table = $("#blocks tbody");
+                    $("#blocks tbody tr").remove();
+                    $.each(data, function (idx, block) {
+                        table.append("<tr><td>" + block.index
+                        + "</td><td>" + block.timestamp 
+                        + "</td>   <td>" + block.data 
+                        + "<br /><b>Hash:</b> " + block.hash 
+                        + "<br /><b>Previous Hash:</b> " + block.previousHash 
+                        + "<br /><b>Source Node:</b> " + block.sourceNode 
+                        + "</td></tr>");
+                    });
+                }
             }
         })
     }
@@ -66,7 +68,7 @@ $(function () {
             url: "api/v1/peers/discover",
             dataType: "json",
             success: function (data) {
-                getPeers();
+                setTimeout(getPeers, 2000);
             }
         })
     }
@@ -77,13 +79,15 @@ $(function () {
             url: "api/v1/peers",
             dataType: "json",
             success: function (data) {
-                var table = $("#peers tbody");
-                $("#peers tbody tr").remove();
-                $.each(data, function (idx, peer) {
-                    table.append("<tr><td>" + peer 
-                    + "</td><td><button type='button' class='btnDisconnect' data='" + peer + "'><i class='fa fa-trash'></i>  Remove</button>"
-                    + "</td></tr>");
-                });
+                if (data.length > 0) {
+                    var table = $("#peers tbody");
+                    $("#peers tbody tr").remove();
+                    $.each(data, function (idx, peer) {
+                        table.append("<tr><td>" + peer 
+                        + "</td><td><button type='button' class='btnDisconnect' data='" + peer + "'><i class='fa fa-trash'></i>  Remove</button>"
+                        + "</td></tr>");
+                    });
+                }
             }
         })
     }
