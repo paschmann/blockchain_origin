@@ -12,6 +12,10 @@ The application has 3 main components.
 
 **Note**: Blockchain data is not persisted, when all 3 of the server components are stopped, data is cleared.
 
+
+![](https://github.com/paschmann/blockchain_origin/raw/master/web/resources/images/simple_architecture.png "")
+
+
 # Installation
 Download/clone this repo
 - Run ```npm install``` in the root directory to install dependencies
