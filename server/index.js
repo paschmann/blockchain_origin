@@ -79,6 +79,7 @@ function initHttpServer() {
     // Serve static files for UI website on root
     app.use('/', express.static('web/'));
     app.use('/scripts', express.static('node_modules/'));
+    logger.winston.info('Web UI on: http://localhost:' + http_port);
 
     //Create HTTP Server
     app.listen(http_port, function () {
