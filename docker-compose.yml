@@ -1,0 +1,44 @@
+version: '3.0'
+
+services:
+  blockchain_mfg_node:       
+    image: paschmann/blockchain_origin:latest
+    container_name: blockchain_mfg_node
+    networks: ['blockchain-network']
+    ports:
+      - "3001:3001"
+      - "6001:6001"
+    environment:
+      HTTP_PORT: "3001"
+      P2P_PORT: "6001"
+      NODE_NAME: "Manufacturing"
+  
+  blockchain_dist_node:       
+      image: paschmann/blockchain_origin:latest
+      container_name: blockchain_dist_node
+      networks: ['blockchain-network']
+      ports:
+        - "3002:3002"
+        - "6002:6002"
+      depends_on:
+        - "blockchain_mfg_node"
+      environment:
+        HTTP_PORT: "3002"
+        P2P_PORT: "6002"
+        NODE_NAME: "Distribution"
+  
+  blockchain_retail_node:       
+        image: paschmann/blockchain_origin:latest
+        container_name: blockchain_retail_node
+        networks: ['blockchain-network']
+        ports:
+          - "3003:3003"
+          - "6003:6003"
+        depends_on:
+          - "blockchain_dist_node"
+        environment:
+          HTTP_PORT: "3003"
+          P2P_PORT: "6003"
+          NODE_NAME: "Retail"
+
+networks: {blockchain-network: {}}
