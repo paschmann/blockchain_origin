@@ -79,6 +79,10 @@ function initHttpServer() {
     // Serve static files for UI website on root
     app.use('/', express.static('web/'));
     app.use('/scripts', express.static('node_modules/'));
+
+    logger.winston.info('----------------------------------------------');
+    logger.winston.info('-------------   ' + server_name + ' Node    --------');
+    logger.winston.info('----------------------------------------------');
     logger.winston.info('Web UI on: http://localhost:' + http_port);
 
     //Create HTTP Server
@@ -105,9 +109,11 @@ function initP2PAutoDiscovery() {
         portscanner.findAPortInUse(i).then(function (port_no) {
             var address = host + port_no;
             if (host && port_no && peers.indexOf(address) == -1 && findWithAttr(sockets, "url", address) == -1 && port_no.toString() !== p2p_port.toString()) {
-                logger.winston.info("New node added: " + address);
-                peers.push(address);
-                connectToPeers([address]);
+                if (port_no > 5999 && port_no < 6011) {
+                    logger.winston.info("New node added: " + address);
+                    peers.push(address);
+                    connectToPeers([address]);
+                }
             }
         })
         i++;
