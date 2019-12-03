@@ -14,7 +14,7 @@ The application has 3 main components.
 
 # Installation
 Download/clone this repo
-Run ```npm install``` to install dependencies
+- Run ```npm install``` in the root directory to install dependencies
 
 I would suggest opening at least 3 terminal/command windows:
 - Run ```npm run start:manufacturing``` in one window
