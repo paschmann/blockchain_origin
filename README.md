@@ -30,7 +30,7 @@ This will run 3 different nodes simulating the peer-to-peer network
 Open your browser to [http://localhost:3001](http://localhost:3001) once the server is running to view the Admin panel where you create transactions directly on each of the nodes.
 
 # Reference
-The blockchain component of this project is largely based on [Naivechain](https://github.com/lhartikk/naivechain) from Ihartikk
+The blockchain component of this project is largely based on [Naivechain](https://github.com/lhartikk/naivechain) from Ihartikk. I took the implementation and refactored and rewrote the codebase in ES5 which matches the frontend and other components.
 
 # Requirements
 Node.js
