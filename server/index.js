@@ -107,12 +107,14 @@ function initP2PAutoDiscovery() {
 
     while (i < 6011) {
         portscanner.findAPortInUse(i).then(function (port_no) {
-            var address = host + port_no;
-            if (host && port_no && peers.indexOf(address) == -1 && findWithAttr(sockets, "url", address) == -1 && port_no.toString() !== p2p_port.toString()) {
-                if (port_no > 5999 && port_no < 6011) {
-                    logger.winston.info("New node added: " + address);
-                    peers.push(address);
-                    connectToPeers([address]);
+            if (port_no) {
+                var address = host + port_no;
+                if (host && port_no && peers.indexOf(address) == -1 && findWithAttr(sockets, "url", address) == -1 && port_no.toString() !== p2p_port.toString()) {
+                    if (port_no > 5999 && port_no < 6011) {
+                        logger.winston.info("New node added: " + address);
+                        peers.push(address);
+                        connectToPeers([address]);
+                    }
                 }
             }
         })
